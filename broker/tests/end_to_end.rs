@@ -198,6 +198,10 @@ async fn fleet_end_to_end() {
     let (_, scan) = t.call("GET", "/v1/vault/scan", None, true).await;
     let paths: Vec<&str> = scan.as_array().unwrap().iter().map(|r| r[0].as_str().unwrap()).collect();
     assert!(paths.contains(&"/Trips/Lisbon.md") && paths.contains(&"/Recipes") && paths.contains(&"/Recipes/Bread.md"), "{paths:?}");
+    let (_, v) = t.call("POST", "/v1/vault/read_many", Some(json!({"paths": ["/Trips/Lisbon.md", "/Recipes/Bread.md", "/nope.md"]})), true).await;
+    assert!(v["files"]["/Trips/Lisbon.md"].as_str().unwrap().starts_with("IyBMaXNib24") && v["files"].get("/Recipes/Bread.md").is_some() && v["missing"][0] == "/nope.md", "read_many: {v}");
+    let (st, _) = t.call("OPTIONS", "/v1/vault/scan", None, false).await;
+    assert_eq!(st, 204, "a CORS preflight needs no token");
     let (st, v) = t.call("POST", "/v1/vault/op", Some(json!({"op": "move", "path": "/Recipes/Bread.md", "to": "/Recipes/Sourdough.md"})), true).await;
     assert!(st == 200 && v["ok"] == true, "{v}");
     let (st, v) = t.call("GET", "/v1/vault/file?path=/../etc/passwd", None, true).await;

@@ -30,6 +30,27 @@ One binary on the OptiPlex, async (tokio) throughout, so many phones are served 
 | **WebSocket chat** | The original design's thin-terminal chat: a message gets the nearest memories and notes put into the system prompt, and the Xavier's reply streams back token by token. Per-connection history, cancel, many phones at once. |
 | **Browser client** | Served at `/` from `FLEET_WEB`, so it is same-origin with the API (no CORS). |
 
+## The clients
+
+The Jade Fleet client is Jade Vault's app (agent, tools, avatar, phone tools) with the vault, the shell and the models
+on the broker. It is built in the [jade-vault](https://github.com/lucky-edgelord/jade-vault) repository:
+
+- **Browser:** the broker serves it at its own address, `http://OPTIPLEX:8765/` (`web/index.html` here is the built
+  page; `deploy/install.sh` installs it). Any browser on the network.
+- **Phones:** the Jade Fleet APK (`bash android/build-apk.sh fleet` in jade-vault). It installs next to Jade Vault.
+
+On first start it asks for the broker's address, the fleet token and a name for the device, then points every model
+setting at the broker. In the client:
+
+- the vault is the broker's shared folder: notes are fetched in bulk at start, and changes from other devices, from
+  commands or from the server itself show up live;
+- `bash` (Jade's tool, the terminal, flows, schedules) runs real bash on the OptiPlex in the shared vault, with its
+  `python3` and `node`; the terminal is a real one there (it needs xterm.js, loaded from jsDelivr the first time);
+- chat, embeddings, decisions (Ollaya or Ollama) and vision go through the broker to the Xavier;
+- two extra tools: `vault_search` (meaning-based search over every device's notes and memories) and `vision`;
+- a FLEET chip shows the connection and who else is online; `/fleet` reconnects or changes the address. If the
+  broker cannot be reached, the client says so instead of quietly using a local vault.
+
 ## Install on the OptiPlex
 
 On Debian 12 or 13, from a clone of this repository:
@@ -132,8 +153,8 @@ needs to happen on Debian 12 (a binary built on a newer system needs a newer gli
 
 - [x] Broker: shared vault, live sync, real shells and terminal, memory and vault RAG, model / decision / vision routing, WebSocket chat
 - [x] Vision service on the Xavier: YOLO and MobileNet as TensorRT engines on the two DLA cores (`/v1/vision/detect`, `/v1/vision/classify`), see [`xavier/README.md`](xavier/README.md). Tested here with stand-in engines; the DLA itself only runs on the Xavier.
-- [ ] Fleet client (APK and browser): Jade Vault's agent, tools and avatar with the vault, shell, memory and models on the broker
-- [ ] Ollama as a decision provider in the client, alongside Ollaya (both on the Xavier)
+- [x] Fleet client (APK and browser): Jade Vault's agent, tools and avatar with the vault, shell, memory and models on the broker
+- [x] Ollama as a decision provider in the client, alongside Ollaya (both on the Xavier)
 
 ## Licenses
 

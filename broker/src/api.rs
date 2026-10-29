@@ -27,6 +27,7 @@ pub fn router(app: App) -> Router {
         .route("/v1/vault/scan", get(vault_scan))
         .route("/v1/vault/file", get(vault_get).put(vault_put))
         .route("/v1/vault/op", post(vault_op))
+        .route("/v1/vault/read_many", post(vault_read_many))
         .route("/v1/events", get(events))
         // memory and vector search over memories and the vault's notes
         .route("/v1/memory", post(memory_add))
@@ -51,7 +52,21 @@ pub fn router(app: App) -> Router {
         .route("/v1/vision/{*rest}", any(to_vision))
         .layer(middleware::from_fn_with_state(app.clone(), auth))
         .layer(DefaultBodyLimit::max(64 * 1024 * 1024));
-    Router::new().route("/health", get(health)).merge(api).fallback(get(web)).with_state(app)
+    Router::new().route("/health", get(health)).merge(api).fallback(get(web)).layer(middleware::from_fn(cors)).with_state(app)
+}
+
+/// Any page may call the broker (the token, not the origin, is what grants access): answer preflights before the
+/// token check and mark every answer as readable cross-origin.
+async fn cors(req: Request, next: Next) -> Response {
+    let pre = req.method() == Method::OPTIONS;
+    let mut r = if pre { StatusCode::NO_CONTENT.into_response() } else { next.run(req).await };
+    let h = r.headers_mut();
+    h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
+    h.insert(header::ACCESS_CONTROL_ALLOW_HEADERS, HeaderValue::from_static("authorization, content-type, x-jade-device, x-jade-token"));
+    h.insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET, POST, PUT, DELETE, OPTIONS"));
+    h.insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, HeaderValue::from_static("*"));
+    h.insert(header::ACCESS_CONTROL_MAX_AGE, HeaderValue::from_static("86400"));
+    r
 }
 
 // ------------------------------------------------------------------ helpers
@@ -193,6 +208,42 @@ async fn vault_put(State(app): State<App>, h: HeaderMap, uri: Uri, Query(q): Que
         Ok(m) => ok(json!({"ok": true, "mtime": m})),
         Err(e) => fail(StatusCode::BAD_REQUEST, e.to_string()),
     }
+}
+
+#[derive(Deserialize)]
+struct ManyReq {
+    paths: Vec<String>,
+    /// stop adding files after this many bytes (default 16 MB)
+    #[serde(default)]
+    max_bytes: Option<usize>,
+}
+
+/// Several files at once, base64: {"files": {path: base64}, "missing": [...]} (a phone fills its cache in a few calls).
+async fn vault_read_many(State(app): State<App>, Json(r): Json<ManyReq>) -> Response {
+    use base64::Engine;
+    let v = app.vault.clone();
+    let cap = r.max_bytes.unwrap_or(16 << 20).min(64 << 20);
+    let out = blocking(move || {
+        let mut files = serde_json::Map::new();
+        let mut missing = Vec::new();
+        let mut total = 0usize;
+        for p in r.paths.iter().take(5000) {
+            if total >= cap {
+                missing.push(json!(p));
+                continue;
+            }
+            match v.read(p, 0, cap - total) {
+                Ok(b) => {
+                    total += b.len();
+                    files.insert(p.clone(), json!(base64::engine::general_purpose::STANDARD.encode(&b)));
+                }
+                Err(_) => missing.push(json!(p)),
+            }
+        }
+        json!({"ok": true, "files": files, "missing": missing})
+    })
+    .await;
+    ok(out)
 }
 
 #[derive(Deserialize)]

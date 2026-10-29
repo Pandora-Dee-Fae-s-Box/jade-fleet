@@ -21,6 +21,7 @@ hyper = { version = "1", features = ["client", "http1", "http2"] }
 hyper-util = { version = "0.1", features = ["client-legacy", "http1", "http2", "tokio"] }
 http-body-util = "0.1"
 bytes = "1"
+base64 = "0.22"
 libc = "0.2"
 notify = { version = "8", default-features = false }
 rusqlite = { version = "0.41", features = ["bundled"] }
