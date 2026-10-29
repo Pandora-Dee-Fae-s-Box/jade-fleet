@@ -36,7 +36,9 @@ The Jade Fleet client is Jade Vault's app (agent, tools, avatar, phone tools) wi
 on the broker. It is built in the [jade-vault](https://github.com/lucky-edgelord/jade-vault) repository:
 
 - **Browser:** the broker serves it at its own address, `http://OPTIPLEX:8765/` (`web/index.html` here is the built
-  page; `deploy/install.sh` installs it). Any browser on the network.
+  page; `deploy/install.sh` installs it). Any browser on the network. `docs/index.html` is the same page for GitHub
+  Pages, but a page opened over https cannot call a plain-http broker (browsers block it), so use the broker's own
+  address on your network.
 - **Phones:** the Jade Fleet APK (`bash android/build-apk.sh fleet` in jade-vault). It installs next to Jade Vault.
 
 On first start it asks for the broker's address, the fleet token and a name for the device, then points every model
