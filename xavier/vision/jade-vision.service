@@ -1,0 +1,16 @@
+[Unit]
+Description=Jade Fleet vision service (YOLO + MobileNet on the DLA cores)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/jade-fleet/vision.env
+WorkingDirectory=/opt/jade-vision
+ExecStart=/usr/bin/python3 /opt/jade-vision/jade_vision.py
+Restart=on-failure
+RestartSec=3
+User=jade
+Group=video
+
+[Install]
+WantedBy=multi-user.target

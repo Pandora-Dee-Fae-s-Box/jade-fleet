@@ -3,3 +3,7 @@ target/
 *.db-wal
 *.db-shm
 .env
+__pycache__/
+xavier/vision/models/
+xavier/vision/engines/
+xavier/vision/logs/

@@ -131,7 +131,7 @@ needs to happen on Debian 12 (a binary built on a newer system needs a newer gli
 ## Status
 
 - [x] Broker: shared vault, live sync, real shells and terminal, memory and vault RAG, model / decision / vision routing, WebSocket chat
-- [ ] Vision service on the Xavier: YOLO and MobileNet as TensorRT engines on the DLA cores (`/v1/vision/detect`, `/v1/vision/classify`)
+- [x] Vision service on the Xavier: YOLO and MobileNet as TensorRT engines on the two DLA cores (`/v1/vision/detect`, `/v1/vision/classify`), see [`xavier/README.md`](xavier/README.md). Tested here with stand-in engines; the DLA itself only runs on the Xavier.
 - [ ] Fleet client (APK and browser): Jade Vault's agent, tools and avatar with the vault, shell, memory and models on the broker
 - [ ] Ollama as a decision provider in the client, alongside Ollaya (both on the Xavier)
 
