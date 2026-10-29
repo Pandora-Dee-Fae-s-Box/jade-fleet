@@ -1,4 +1,4 @@
-//! Embeddings from Ollama on this machine. A few at a time, so a big re-index does not starve chat requests.
+//! Embeddings from Ollama on the Xavier. A few at a time, so a big re-index does not starve chat requests.
 
 use crate::config::Config;
 use crate::upstream::Upstream;

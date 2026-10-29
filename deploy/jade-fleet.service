@@ -1,0 +1,23 @@
+[Unit]
+Description=Jade Fleet broker (shared vault, shells, memory, model routing)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=jade
+Group=jade
+EnvironmentFile=/etc/jade-fleet/fleet.env
+ExecStart=/usr/local/bin/jade-fleet
+WorkingDirectory=/var/lib/jade-fleet
+Restart=on-failure
+RestartSec=3
+# Commands phones run are this user's processes: give it what it needs, not root.
+NoNewPrivileges=yes
+ProtectSystem=full
+PrivateTmp=yes
+LimitNOFILE=65536
+# Phones' shells and their children stay in this unit; stopping it stops them.
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target
