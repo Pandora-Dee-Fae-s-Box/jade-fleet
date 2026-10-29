@@ -1,0 +1,39 @@
+[package]
+name = "jade-fleet"
+description = "Jade Fleet broker: phones over WebSocket, embeddings from Ollama, RAG in SQLite + sqlite-vec, replies streamed from llama-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[lib]
+name = "jade_fleet"
+path = "src/lib.rs"
+
+[[bin]]
+name = "jade-fleet"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "query", "tokio", "ws"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal", "process", "io-util", "fs"] }
+hyper = { version = "1", features = ["client", "http1", "http2"] }
+hyper-util = { version = "0.1", features = ["client-legacy", "http1", "http2", "tokio"] }
+http-body-util = "0.1"
+bytes = "1"
+libc = "0.2"
+notify = { version = "8", default-features = false }
+rusqlite = { version = "0.41", features = ["bundled"] }
+libsqlite3-sys = { version = "0.39", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+futures-util = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "ansi"] }
+
+[build-dependencies]
+cc = "1"
+
+[dev-dependencies]
+tokio-tungstenite = "0.29"
+tempfile = "3"
