@@ -37,3 +37,4 @@ cc = "1"
 [dev-dependencies]
 tokio-tungstenite = "0.29"
 tempfile = "3"
+hyper = { version = "1", features = ["client", "http1"] }

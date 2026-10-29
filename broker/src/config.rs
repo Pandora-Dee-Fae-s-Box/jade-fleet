@@ -13,7 +13,7 @@ pub struct Config {
     pub vault_dir: PathBuf,
     /// Bearer token every phone must send. Empty: read or create data_dir/token.
     pub token: String,
-    /// Ollama on this machine, for embeddings
+    /// Ollama on the Xavier: embeddings and decision models (all model compute is on the Xavier)
     pub ollama_url: String,
     pub embed_model: String,
     pub embed_dim: usize,
@@ -34,10 +34,14 @@ pub struct Config {
     /// Characters per indexed chunk
     pub chunk_chars: usize,
     pub db_readers: usize,
-    /// Decision models (/v1/systemone, /api/decide): Ollama 0.35+ or Ollaya. Default: OLLAMA_URL.
+    /// Ollaya on the Xavier (decision models such as laya)
+    pub ollaya_url: String,
+    /// Where /v1/systemone and /api/decide go: Ollaya (default) or Ollama 0.35+, both on the Xavier
     pub decide_url: String,
     /// The vision service on the Xavier (YOLO / MobileNet on the DLA cores)
     pub vision_url: String,
+    /// Folder with the browser client (index.html …), served at /
+    pub web_dir: PathBuf,
     /// Interpreters phones may run on this machine
     pub shells: Vec<String>,
     /// Longest a run-and-return command may take
@@ -65,7 +69,7 @@ impl Config {
             data_dir,
             vault_dir,
             token: env("FLEET_TOKEN", ""),
-            ollama_url: env("OLLAMA_URL", "http://127.0.0.1:11434").trim_end_matches('/').to_string(),
+            ollama_url: env("OLLAMA_URL", "http://192.168.1.100:11434").trim_end_matches('/').to_string(),
             embed_query_prefix: std::env::var("EMBED_QUERY_PREFIX").unwrap_or_else(|_| if nomic { "search_query: ".into() } else { String::new() }),
             embed_doc_prefix: std::env::var("EMBED_DOC_PREFIX").unwrap_or_else(|_| if nomic { "search_document: ".into() } else { String::new() }),
             embed_model,
@@ -79,8 +83,10 @@ impl Config {
             index_vault: env("INDEX_VAULT", "1") != "0",
             chunk_chars: envn("CHUNK_CHARS", 1200usize).clamp(200, 8000),
             db_readers: envn("DB_READERS", 4usize).clamp(1, 32),
-            decide_url: std::env::var("DECIDE_URL").ok().filter(|v| !v.trim().is_empty()).unwrap_or_else(|| env("OLLAMA_URL", "http://127.0.0.1:11434")).trim_end_matches('/').to_string(),
+            ollaya_url: env("OLLAYA_URL", "http://192.168.1.100:11435").trim_end_matches('/').to_string(),
+            decide_url: std::env::var("DECIDE_URL").ok().filter(|v| !v.trim().is_empty()).unwrap_or_else(|| env("OLLAYA_URL", "http://192.168.1.100:11435")).trim_end_matches('/').to_string(),
             vision_url: env("VISION_URL", "http://192.168.1.100:8090").trim_end_matches('/').to_string(),
+            web_dir: PathBuf::from(env("FLEET_WEB", "/usr/share/jade-fleet/web")),
             shells: env("FLEET_SHELLS", "bash,sh,python3,node").split(',').map(|x| x.trim().to_string()).filter(|x| !x.is_empty()).collect(),
             exec_max: Duration::from_secs(envn("EXEC_MAX", 1800)),
             embed_timeout: Duration::from_secs(envn("EMBED_TIMEOUT", 30)),

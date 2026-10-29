@@ -1,5 +1,5 @@
 //! Jade Fleet broker (tier 2, the OptiPlex): the fleet's shared vault, real shells, vector memory and search, and
-//! the way through to the models (Xavier llama-server, Ollama, decision models, the vision service).
+//! the way through to the models, all on the Xavier (llama-server, Ollama, Ollaya, the vision service).
 
 pub mod api;
 pub mod chat;
